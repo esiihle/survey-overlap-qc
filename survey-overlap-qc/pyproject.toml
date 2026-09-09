@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "overlap-qc"
+version = "0.1.0"
+description = "Overlap/Venn variable generation and heavy-selector QC for survey data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["survey", "market-research", "venn", "overlap", "data-quality", "qc"]
+dependencies = [
+    "pandas>=2.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+synthetic = ["Faker>=24.0"]
+dev = ["pytest>=8.0", "Faker>=24.0"]
+
+[project.scripts]
+overlap-qc = "overlap_qc.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

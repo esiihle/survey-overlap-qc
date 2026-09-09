@@ -1,0 +1,37 @@
+# Example analysis config for the fictional snack-brand survey.
+#
+# It runs against a SYNTHETIC binary matrix produced by
+# scripts/generate_synthetic_data.py. Every column and label below is invented
+# and refers to no real survey, client, or brand.
+#
+# This binary format is exactly what the companion compact2binary tool emits,
+# so the two tools chain together: compact2binary -> overlap-qc.
+
+id: respondent_id
+weight: weight            # optional; remove for an unweighted analysis
+
+overlap_groups:
+  # A 3-set group -> eligible for a Venn diagram in the HTML report.
+  - name: "Purchase overlap: top 3 brands"
+    sets:
+      - { label: "Crispa", columns: [Q3_1] }
+      - { label: "Muncho", columns: [Q3_2] }
+      - { label: "Snaxi",  columns: [Q3_3] }
+
+  # A 2-set group where each "set" collapses several codes via OR.
+  - name: "Awareness: premium vs value tiers"
+    sets:
+      - { label: "Premium tier", columns: [Q4_1, Q4_3, Q4_7] }
+      - { label: "Value tier",   columns: [Q4_2, Q4_4, Q4_6] }
+
+heavy_selectors:
+  # Flag respondents ticking almost every brand in the purchase block.
+  - name: "Brands bought (Q3)"
+    columns: [Q3_1, Q3_2, Q3_3, Q3_4, Q3_5, Q3_6, Q3_7, Q3_8]
+    max_absolute: 7          # >= 7 of 8 selected
+    sd_above_mean: 2.5       # or a statistical outlier
+
+  # Same idea on the awareness block, expressed as a fraction of options.
+  - name: "Brands aware of (Q4)"
+    columns: [Q4_1, Q4_2, Q4_3, Q4_4, Q4_5, Q4_6, Q4_7, Q4_8]
+    fraction: 0.9            # >= 90% of options selected
