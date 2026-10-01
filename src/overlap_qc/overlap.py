@@ -62,6 +62,7 @@ class GroupResult:
     total_n: int
     total_weight: float
     set_membership: dict[str, "pd.Series"] = field(default_factory=dict)
+    weights: "pd.Series | None" = None
 
     @property
     def can_draw_venn(self) -> bool:
@@ -142,6 +143,7 @@ def compute_group(
         total_n=total_n,
         total_weight=total_weight,
         set_membership=membership,
+        weights=weights,
     )
 
 

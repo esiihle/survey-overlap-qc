@@ -34,9 +34,11 @@ from .overlap import (
     compute_group,
     slugify,
 )
+from .pairwise import PairwiseResult, compute_pairwise, pairwise_from_group
 from .report import render_html
+from .tables import read_table, write_table
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "AnalysisConfig",
@@ -54,6 +56,11 @@ __all__ = [
     "compute_heavy",
     "compute_all_heavy",
     "flags_frame",
+    "PairwiseResult",
+    "compute_pairwise",
+    "pairwise_from_group",
+    "read_table",
+    "write_table",
     "render_html",
     "__version__",
 ]

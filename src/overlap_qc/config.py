@@ -66,6 +66,8 @@ class HeavySelector:
     * ``fraction``      - selection count / len(columns) >= this fraction.
     * ``sd_above_mean`` - selection count > mean + k * standard deviation,
                           with the mean/sd computed across all respondents.
+    * ``iqr``           - selection count > Q3 + k * IQR (Tukey-style outlier
+                          rule; robust to skew, unlike ``sd_above_mean``).
     """
 
     name: str
@@ -73,6 +75,7 @@ class HeavySelector:
     max_absolute: int | None = None
     fraction: float | None = None
     sd_above_mean: float | None = None
+    iqr: float | None = None
 
     def describe(self) -> str:
         parts = []
@@ -82,6 +85,8 @@ class HeavySelector:
             parts.append(f"count/{len(self.columns)} >= {self.fraction:g}")
         if self.sd_above_mean is not None:
             parts.append(f"count > mean + {self.sd_above_mean:g}*sd")
+        if self.iqr is not None:
+            parts.append(f"count > Q3 + {self.iqr:g}*IQR")
         return " OR ".join(parts) if parts else "(no rule)"
 
 
@@ -143,13 +148,17 @@ def _parse_heavy(raw: dict[str, Any], index: int) -> HeavySelector:
     max_absolute = raw.get("max_absolute")
     fraction = raw.get("fraction")
     sd_above_mean = raw.get("sd_above_mean")
-    if max_absolute is None and fraction is None and sd_above_mean is None:
+    iqr = raw.get("iqr")
+    if (max_absolute is None and fraction is None
+            and sd_above_mean is None and iqr is None):
         raise ConfigError(
             f"{ctx}: at least one rule "
-            "(max_absolute / fraction / sd_above_mean) is required"
+            "(max_absolute / fraction / sd_above_mean / iqr) is required"
         )
     if fraction is not None and not (0 < float(fraction) <= 1):
         raise ConfigError(f"{ctx}: 'fraction' must be in (0, 1]")
+    if iqr is not None and float(iqr) < 0:
+        raise ConfigError(f"{ctx}: 'iqr' must be >= 0")
 
     return HeavySelector(
         name=name,
@@ -157,6 +166,7 @@ def _parse_heavy(raw: dict[str, Any], index: int) -> HeavySelector:
         max_absolute=int(max_absolute) if max_absolute is not None else None,
         fraction=float(fraction) if fraction is not None else None,
         sd_above_mean=float(sd_above_mean) if sd_above_mean is not None else None,
+        iqr=float(iqr) if iqr is not None else None,
     )
 
 

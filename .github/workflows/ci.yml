@@ -26,4 +26,5 @@ jobs:
         run: |
           python scripts/generate_synthetic_data.py --rows 300 --seed 1 --out data/tmp.csv
           overlap-qc run -i data/tmp.csv -c config/analysis.example.yaml \
-            --out-html data/tmp.html --out-vars data/tmp_vars.csv --out-flags data/tmp_flags.csv
+            --out-html data/tmp.html --out-vars data/tmp_vars.csv \
+            --out-flags data/tmp_flags.csv --out-pairwise data/tmp_pairwise.csv

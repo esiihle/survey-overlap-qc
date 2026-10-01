@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from .config import AnalysisConfig
 from .heavy_selector import HeavyResult
 from .overlap import GroupResult, Region
+from .pairwise import pairwise_from_group
 
 _MAX_FLAGGED_ROWS = 100  # cap the flagged table so reports stay readable
 
@@ -158,12 +159,50 @@ def _overlap_section(result: GroupResult, weighted: bool) -> str:
         )
     else:
         parts.append(
-            '<div class="legend">Venn diagram is shown for 2&ndash;3 sets; '
-            "this group has more, so see the region table.</div>"
+            '<div class="legend">A Venn diagram is drawn for 2&ndash;3 sets; '
+            "this group has more, so the pairwise overlap matrix below is the "
+            "clearer summary.</div>"
         )
     parts.append('<div style="flex:1; min-width:280px;">'
                  + _region_table(result, weighted) + "</div>")
     parts.append("</div>")
+    parts.append(_pairwise_section(result))
+    return "".join(parts)
+
+
+def _pairwise_matrix_table(result: GroupResult) -> str:
+    """A k x k matrix: diagonal = set size, off-diagonal = intersection + Jaccard."""
+    pr = pairwise_from_group(result)
+    labels = pr.labels
+    head = "".join(f'<th class="num">{_esc(lbl)}</th>' for lbl in labels)
+    rows = []
+    for a in labels:
+        cells = []
+        for b in labels:
+            n = int(pr.n_both.loc[a, b])
+            if a == b:
+                cells.append(f'<td class="num"><strong>{n}</strong></td>')
+            else:
+                j = pr.jaccard.loc[a, b] * 100.0
+                cells.append(
+                    f'<td class="num">{n}<br>'
+                    f'<span class="sub">J {j:.0f}%</span></td>'
+                )
+        rows.append(f"<tr><th>{_esc(a)}</th>{''.join(cells)}</tr>")
+    return (
+        f'<table><thead><tr><th></th>{head}</tr></thead>'
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _pairwise_section(result: GroupResult) -> str:
+    parts = ["<h3>Pairwise overlap</h3>"]
+    parts.append(
+        '<p class="sub">Diagonal = set size (n). Off-diagonal = respondents in '
+        "both sets, with the Jaccard similarity J (shared &divide; combined). "
+        "This view scales to any number of sets.</p>"
+    )
+    parts.append(_pairwise_matrix_table(result))
     return "".join(parts)
 
 

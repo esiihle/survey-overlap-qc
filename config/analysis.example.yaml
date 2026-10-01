@@ -31,7 +31,9 @@ heavy_selectors:
     max_absolute: 7          # >= 7 of 8 selected
     sd_above_mean: 2.5       # or a statistical outlier
 
-  # Same idea on the awareness block, expressed as a fraction of options.
+  # Same idea on the awareness block, expressed as a fraction of options,
+  # with a robust IQR outlier rule as a second trigger.
   - name: "Brands aware of (Q4)"
     columns: [Q4_1, Q4_2, Q4_3, Q4_4, Q4_5, Q4_6, Q4_7, Q4_8]
     fraction: 0.9            # >= 90% of options selected
+    iqr: 1.5                 # or a Tukey outlier: count > Q3 + 1.5*IQR

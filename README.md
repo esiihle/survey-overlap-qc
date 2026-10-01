@@ -42,10 +42,14 @@ It consumes the same binary matrix the companion [compact2binary](../survey-comp
 - **Config-driven.** All survey specifics live in one YAML file; the analysis code is generic.
 - **Sets are OR-groups of columns.** A set can be a single indicator or several codes collapsed into one concept (e.g. "Premium tier" = any premium brand).
 - **Weighting throughout.** Give a weight column and every region size and percentage is weighted; omit it for an unweighted run.
-- **Three heavy-selector rules**, combined with OR: `max_absolute`, `fraction` (of options), and `sd_above_mean` (statistical outlier).
+- **Pairwise overlap matrix.** For every group, a set-by-set matrix of intersection counts, Jaccard similarity, and conditional shares — the readable overlap view when there are too many sets for a Venn.
+- **Four heavy-selector rules**, combined with OR: `max_absolute`, `fraction` (of options), `sd_above_mean` (statistical outlier), and `iqr` (robust Tukey outlier).
+- **CSV, TSV & Parquet.** Read and write any of them by file extension, so it chains directly with compact2binary's Parquet output.
 - **Partition invariant enforced.** Venn regions are asserted to sum back to the respondent total — a silent miscount fails loudly.
 - **Self-contained HTML.** Inline CSS + inline SVG, every value escaped and sourced at run time. No external fonts, scripts, logos, or embedded datasets.
 - **Runs out of the box** on synthetic data with injected heavy selectors so the QC has something to catch.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full 0.1.0 → 0.2.0 history.
 
 ## Quickstart
 
@@ -63,7 +67,8 @@ overlap-qc run \
     -c config/analysis.example.yaml \
     --out-html data/report.html \
     --out-vars data/derived_variables.csv \
-    --out-flags data/heavy_flags.csv
+    --out-flags data/heavy_flags.csv \
+    --out-pairwise data/pairwise_overlap.csv
 ```
 
 Expected console output:
@@ -115,6 +120,7 @@ heavy_selectors:
     columns: [Q3_1, Q3_2, Q3_3, Q3_4, Q3_5, Q3_6, Q3_7, Q3_8]
     max_absolute: 7          # flag if >= 7 of 8 selected
     sd_above_mean: 2.5       # ...or a statistical outlier (OR of rules)
+    iqr: 1.5                 # ...or a robust Tukey outlier: count > Q3 + 1.5*IQR
 ```
 
 A Venn diagram is drawn for groups of 2–3 sets; larger groups still get a full region table.
@@ -123,9 +129,12 @@ A Venn diagram is drawn for groups of 2–3 sets; larger groups still get a full
 
 | File | Contents |
 |------|----------|
-| `--out-html` | Self-contained report: Venn diagrams, region tables, heavy-selector summaries + flagged lists. |
+| `--out-html` | Self-contained report: Venn diagrams, region tables, pairwise matrices, heavy-selector summaries + flagged lists. |
 | `--out-vars` | Derived variables per respondent: one 0/1 column per Venn region and per set membership. |
 | `--out-flags`| Per-respondent selection counts and flags for each check, plus `flag__any`. |
+| `--out-pairwise`| Tidy pairwise overlap table: `n_both`, weighted overlap, Jaccard, and both conditional shares per set pair. |
+
+Any output path may be `.csv`, `.tsv`, or `.parquet` — the format follows the extension.
 
 ## Project structure
 
@@ -134,7 +143,10 @@ survey-overlap-qc/
 ├── src/overlap_qc/
 │   ├── config.py          # analysis config model + YAML loader
 │   ├── overlap.py         # Venn region computation + derived variables
-│   ├── heavy_selector.py  # selection counts + flagging rules
+│   ├── pairwise.py        # pairwise overlap / Jaccard / conditional matrices
+│   ├── heavy_selector.py  # selection counts + flagging rules (incl. IQR)
+│   ├── tables.py          # CSV / TSV / Parquet I/O dispatch
+│   ├── logging_setup.py   # --verbose / --quiet logging
 │   ├── report.py          # self-contained HTML (inline SVG Venns)
 │   └── cli.py
 ├── scripts/generate_synthetic_data.py

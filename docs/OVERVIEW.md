@@ -48,9 +48,15 @@ This repo was produced by **reimplementing the technique against synthetic data*
 - The HTML report is assembled at run time from that synthetic input; there is no authored-in dataset or branding to leak.
 - Pre-commit hooks (`gitleaks`, `nbstripout`) enforce the no-secrets / no-notebook-output rules on every commit.
 
+## Shipped since 0.1.0
+
+See [CHANGELOG.md](../CHANGELOG.md) for detail. In brief, 0.2.0 added a pairwise
+overlap matrix (Jaccard + conditional shares) that scales past three sets, an
+IQR heavy-selector rule, CSV/TSV/Parquet I/O, a pairwise export and report
+section, and logging.
+
 ## Possible extensions
 
 - Area-proportional 2-set Venns (exact) as an opt-in.
 - Additional QC signals alongside heavy selection: straight-lining, speeding, and near-duplicate response patterns.
 - Direct SPSS (`.sav`) input/output.
-- A pairwise overlap matrix (Jaccard / conditional penetration) for many-set groups where a Venn won't fit.

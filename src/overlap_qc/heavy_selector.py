@@ -74,6 +74,12 @@ def compute_heavy(
         thr = mean + check.sd_above_mean * sd
         flagged |= counts > thr
 
+    if check.iqr is not None:
+        q1 = float(counts.quantile(0.25)) if n else 0.0
+        q3 = float(counts.quantile(0.75)) if n else 0.0
+        thr = q3 + check.iqr * (q3 - q1)
+        flagged |= counts > thr
+
     distribution = {int(k): int(v) for k, v in counts.value_counts().sort_index().items()}
 
     return HeavyResult(
